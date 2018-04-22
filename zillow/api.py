@@ -14,37 +14,50 @@ from .place import Place
 
 class ValuationApi(object):
     """
-    A python interface into the Zillow API
+    A python interface into the Zillow Valuation API
     By default, the Api caches results for 1 minute.
     Example usage:
       To create an instance of the zillow.ValuationApi class:
         >>> import zillow
         >>> api = zillow.ValuationApi()
 
-
     All available methods include:
         >>> data = api.GetSearchResults("<your key here>", "<your address here>", "<your zip here>")
     """
+
     def __init__(self):
-        self.base_url = "https://www.zillow.com/webservice"
+        self._base_url = "https://www.zillow.com/webservice"
         self._input_encoding = None
-        self._request_headers=None
+        self._request_headers = None
         self.__auth = None
         self._timeout = None
+
+    @property
+    def base_url(self):
+        return self._base_url
 
     def GetSearchResults(self, zws_id, address, citystatezip, retnzestimate=False):
         """
         The GetSearchResults API finds a property for a specified address.
-        The content returned contains the address for the property or properties as well as the Zillow Property ID (ZPID) and current Zestimate.
-        It also includes the date the Zestimate was computed, a valuation range and the Zestimate ranking for the property within its ZIP code.
-        The GetSearchResults API Web Service is located at: http://www.zillow.com/webservice/GetSearchResults.htm
-        :param zws_id: The Zillow Web Service Identifier. Each subscriber to Zillow Web Services is uniquely identified by an ID sequence and every request to Web services requires this ID.
-        :param address: The address of the property to search. This string should be URL encoded.
-        :param citystatezip: The city+state combination and/or ZIP code for which to search. This string should be URL encoded. Note that giving both city and state is required. Using just one will not work.
-        :param retnzestimat: Return Rent Zestimate information if available (boolean true/false, default: false)
+        The content returned contains the address for the property or properties as
+        well as the Zillow Property ID (ZPID) and current Zestimate. It also includes
+        the date the Zestimate was computed, a valuation range and the Zestimate
+        ranking for the property within its ZIP code. The GetSearchResults API Web
+        Service is located at: http://www.zillow.com/webservice/GetSearchResults.htm
+
+        :param zws_id: The Zillow Web Service Identifier. Each subscriber to
+            Zillow Web Services is uniquely identified by an ID sequence and every
+            request to Web services requires this ID.
+        :param address: The address of the property to search. This string
+            should be URL encoded.
+        :param citystatezip: The city+state combination and/or ZIP code for which to
+            search. This string should be URL encoded. Note that giving both city and
+            state is required. Using just one will not work.
+        :param retnzestimat: Return Rent Zestimate information if available
+            (boolean true/false, default: false)
         :return:
         """
-        url = '%s/GetSearchResults.htm' % (self.base_url)
+        url = '%s/GetSearchResults.htm' % (self._base_url)
         parameters = {'zws-id': zws_id}
         if address and citystatezip:
             parameters['address'] = address
@@ -62,7 +75,7 @@ class ValuationApi(object):
         place = Place()
         try:
             place.set_data(xmltodict_data.get('SearchResults:searchresults', None)['response']['results']['result'])
-        except:
+        except Exception:
             raise ZillowError({'message': "Zillow did not return a valid response: %s" % data})
 
         return place
@@ -79,7 +92,7 @@ class ValuationApi(object):
         :param retnzestimate: Return Rent Zestimate information if available (boolean true/false, default: false)
         :return:
         """
-        url = '%s/GetZestimate.htm' % (self.base_url)
+        url = '%s/GetZestimate.htm' % (self._base_url)
         parameters = {'zws-id': zws_id,
                       'zpid': zpid}
         if retnzestimate:
@@ -93,7 +106,7 @@ class ValuationApi(object):
         place = Place()
         try:
             place.set_data(xmltodict_data.get('Zestimate:zestimate', None)['response'])
-        except:
+        except Exception:
             raise ZillowError({'message': "Zillow did not return a valid response: %s" % data})
 
         return place
@@ -101,8 +114,10 @@ class ValuationApi(object):
     def GetDeepSearchResults(self, zws_id, address, citystatezip, retnzestimate=False):
         """
         The GetDeepSearchResults API finds a property for a specified address.
-        The result set returned contains the full address(s), zpid and Zestimate data that is provided by the GetSearchResults API.
-        Moreover, this API call also gives rich property data like lot size, year built, bath/beds, last sale details etc.
+        The result set returned contains the full address(s), zpid and Zestimate data that is provided
+        by the GetSearchResults API.  Moreover, this API call also gives rich property data like lot size,
+        year built, bath/beds, last sale details etc.
+
         :zws_id: The Zillow Web Service Identifier.
         :param address: The address of the property to search. This string should be URL encoded.
         :param citystatezip: The city+state combination and/or ZIP code for which to search.
@@ -111,7 +126,7 @@ class ValuationApi(object):
 
         Example:
         """
-        url = '%s/GetDeepSearchResults.htm' % (self.base_url)
+        url = '%s/GetDeepSearchResults.htm' % (self._base_url)
         parameters = {'zws-id': zws_id,
                       'address': address,
                       'citystatezip': citystatezip
@@ -128,7 +143,7 @@ class ValuationApi(object):
         place = Place(has_extended_data=True)
         try:
             place.set_data(xmltodict_data.get('SearchResults:searchresults', None)['response']['results']['result'])
-        except:
+        except Exception:
             raise ZillowError({'message': "Zillow did not return a valid response: %s" % data})
 
         return place
@@ -147,7 +162,7 @@ class ValuationApi(object):
         Example
             >>> data = api.GetDeepComps("<your key here>", 2100641621, 10)
         """
-        url = '%s/GetDeepComps.htm' % (self.base_url)
+        url = '%s/GetDeepComps.htm' % (self._base_url)
         parameters = {'zws-id': zws_id,
                       'zpid': zpid,
                       'count': count}
@@ -166,7 +181,7 @@ class ValuationApi(object):
 
         try:
             principal_place.set_data(principal_data)
-        except:
+        except Exception:
             raise ZillowError({'message': 'No principal data found: %s' % data})
 
         # get the comps property_data
@@ -178,7 +193,7 @@ class ValuationApi(object):
             try:
                 place.set_data(datum)
                 comp_places.append(place)
-            except:
+            except Exception:
                 raise ZillowError({'message': 'No valid comp data found %s' % datum})
 
         output = {
@@ -191,14 +206,16 @@ class ValuationApi(object):
     def GetComps(self, zws_id, zpid, count=25, rentzestimate=False):
         """
         The GetComps API returns a list of comparable recent sales for a specified property.
-        The result set returned contains the address, Zillow property identifier,
-        and Zestimate for the comparable properties and the principal property for which the comparables are being retrieved.
+        The result set returned contains the address, Zillow property identifier, and Zestimate
+        for the comparable properties and the principal property for which the comparables
+        are being retrieved.
+
         :param zpid: The address of the property to search. This string should be URL encoded.
         :param count: The number of comparable recent sales to obtain (integer between 1 and 25)
         :param retnzestimate: Return Rent Zestimate information if available (boolean true/false, default: false)
         :return:
         """
-        url = '%s/GetComps.htm' % (self.base_url)
+        url = '%s/GetComps.htm' % (self._base_url)
         parameters = {'zws-id': zws_id,
                       'zpid': zpid,
                       'count': count}
@@ -217,7 +234,7 @@ class ValuationApi(object):
 
         try:
             principal_place.set_data(principal_data)
-        except:
+        except Exception:
             raise ZillowError({'message': 'No principal data found: %s' % data})
 
         # get the comps property_data
@@ -229,7 +246,7 @@ class ValuationApi(object):
             try:
                 place.set_data(datum)
                 comp_places.append(place)
-            except:
+            except Exception:
                 raise ZillowError({'message': 'No valid comp data found %s' % datum})
 
         output = {
@@ -307,3 +324,22 @@ class ValuationApi(object):
             return str(s, self._input_encoding).encode('utf-8')
         else:
             return str(s).encode('utf-8')
+
+
+class NeighborhoodApi(object):
+    """
+    A python interface into the Zillow Neighborhood API
+    Example usage:
+      To create an instance of the zillow.NeighborhoodApi class:
+        >>> import zillow
+        >>> api = zillow.NeighborhoodApi()
+
+    """
+
+    def __init__(self):
+        self._base_url = "https://www.zillow.com/webservice"
+
+    @property
+    def base_url(self):
+        return self._base_url
+

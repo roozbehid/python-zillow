@@ -34,6 +34,7 @@ class SourceData(classmethod):
 
 
 class Links(SourceData):
+
     def __init__(self, **kwargs):
         self.home_details = None
         self.graphs_and_data = None
@@ -48,12 +49,14 @@ class Links(SourceData):
         self.home_details = source_data['homedetails']
         try:
             self.graphs_and_data = source_data['graphsanddata']
-        except:
+        except Exception:
             self.graphs_and_data = None
         self.map_this_home = source_data['mapthishome']
         self.comparables = source_data['comparables']
 
+
 class FullAddress(SourceData):
+
     def __init__(self, **kwargs):
         self.street = None
         self.zipcode = None
@@ -64,7 +67,8 @@ class FullAddress(SourceData):
 
     def set_data(self, source_data):
         """
-        :source_data: Data from data.get('SearchResults:searchresults', None)['response']['results']['result']['address']
+        :source_data: Data taken from data.get('SearchResults:searchresults', None)
+            ['response']['results']['result']['address']
         :return:
         """
         self.street = source_data['street']
@@ -74,7 +78,9 @@ class FullAddress(SourceData):
         self.latitude = source_data['latitude']
         self.longitude = source_data['longitude']
 
+
 class ZEstimateData(SourceData):
+
     def __init__(self, **kwargs):
         self.amount = None
         self.amount_currency = None
@@ -85,29 +91,32 @@ class ZEstimateData(SourceData):
 
     def set_data(self, source_data):
         """
-        :source_data: Data from data.get('SearchResults:searchresults', None)['response']['results']['result']['zestimate']
+        :source_data: Data from data.get('SearchResults:searchresults', None)
+            ['response']['results']['result']['zestimate']
         :return:
         """
         try:
             self.amount = int(source_data['amount']['#text'])
-        except:
+        except Exception:
             self.amount = None
         self.amount_currency = source_data['amount']['@currency']
         self.amount_last_updated = source_data['last-updated']
         try:
             self.amount_change_30days = int(source_data['valueChange']['#text'])
-        except:
+        except Exception:
             self.amount_change_30days = None
         try:
             self.valuation_range_low = int(source_data['valuationRange']['low']['#text'])
-        except:
+        except Exception:
             self.valuation_range_low = None
         try:
             self.valuation_range_high = int(source_data['valuationRange']['high']['#text'])
-        except:
+        except Exception:
             self.valuation_range_high = None
 
+
 class LocalRealEstate(SourceData):
+
     def __init__(self):
         self.region_name = None
         self.region_id = None
@@ -119,18 +128,21 @@ class LocalRealEstate(SourceData):
 
     def set_data(self, source_data):
         """
-        :source_data": Data from data.get('SearchResults:searchresults', None)['response']['results']['result']['localRealEstate']
+        :source_data": Data from data.get('SearchResults:searchresults', None)
+            ['response']['results']['result']['localRealEstate']
         :return:
         """
         self.region_name = source_data['region']['@name']
         self.region_id = source_data['region']['@id']
-        self.region_type =  source_data['region']['@type']
+        self.region_type = source_data['region']['@type']
         self.zillow_home_value_index = source_data.get('zindexValue', None)
-        self.overview_link =  source_data['region']['links']['overview']
-        self.fsbo_link =  source_data['region']['links']['forSaleByOwner']
-        self.sale_link =  source_data['region']['links']['forSale']
+        self.overview_link = source_data['region']['links']['overview']
+        self.fsbo_link = source_data['region']['links']['forSaleByOwner']
+        self.sale_link = source_data['region']['links']['forSale']
+
 
 class ExtendedData(SourceData):
+
     def __init__(self):
         self.fips_county = None
         self.usecode = None
@@ -186,13 +198,16 @@ class Place(SourceData):
         )
         return self.zestimate
 
-
     def set_data(self, source_data):
         """
-        :source_data": Data from data.get('SearchResults:searchresults', None)['response']['results']['result']
-        :param source_data:
+        :source_data: Data from data.get('SearchResults:searchresults', None)['response']['results']['result']
         :return:
         """
+
+        # some properties have more than posting on Zillow, in which
+        # case source_data will return a list
+        if isinstance(source_data, list):
+            source_data = source_data[0]
 
         self.zpid = source_data.get('zpid', None)
         self.similarity_score = source_data.get('@score', None)
