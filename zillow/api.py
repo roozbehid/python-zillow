@@ -1,15 +1,10 @@
-import requests
 import xmltodict
 
-try:
-    # python 3
-    from urllib.parse import urlparse, urlunparse, urlencode
-except ImportError:
-    from urlparse import urlparse, urlunparse
-    from urllib import urlencode
-
 from .error import ZillowError
-from .place import Place
+from .result_fields import Place
+from .result_fields import Region
+
+from .url_utils import request_url
 
 
 class ValuationApi(object):
@@ -29,8 +24,6 @@ class ValuationApi(object):
         self._base_url = "https://www.zillow.com/webservice"
         self._input_encoding = None
         self._request_headers = None
-        self.__auth = None
-        self._timeout = None
 
     @property
     def base_url(self):
@@ -67,14 +60,14 @@ class ValuationApi(object):
         if retnzestimate:
             parameters['retnzestimate'] = 'true'
 
-        resp = self._RequestUrl(url, 'GET', data=parameters)
+        resp = request_url(url, 'GET', data=parameters)
         data = resp.content.decode('utf-8')
 
         xmltodict_data = xmltodict.parse(data)
 
         place = Place()
         try:
-            place.set_data(xmltodict_data.get('SearchResults:searchresults', None)['response']['results']['result'])
+            place.set_data(xmltodict_data['SearchResults:searchresults']['response']['results']['result'])
         except Exception:
             raise ZillowError({'message': "Zillow did not return a valid response: %s" % data})
 
@@ -98,7 +91,7 @@ class ValuationApi(object):
         if retnzestimate:
             parameters['retnzestimate'] = 'true'
 
-        resp = self._RequestUrl(url, 'GET', data=parameters)
+        resp = request_url(url, 'GET', data=parameters)
         data = resp.content.decode('utf-8')
 
         xmltodict_data = xmltodict.parse(data)
@@ -114,14 +107,18 @@ class ValuationApi(object):
     def GetDeepSearchResults(self, zws_id, address, citystatezip, retnzestimate=False):
         """
         The GetDeepSearchResults API finds a property for a specified address.
-        The result set returned contains the full address(s), zpid and Zestimate data that is provided
-        by the GetSearchResults API.  Moreover, this API call also gives rich property data like lot size,
-        year built, bath/beds, last sale details etc.
+        The result set returned contains the full address(s), zpid and Zestimate
+        data that is provided by the GetSearchResults API.  Moreover, this API call
+        also gives rich property data like lot size, year built, bath/beds, last
+        sale details etc.
 
         :zws_id: The Zillow Web Service Identifier.
-        :param address: The address of the property to search. This string should be URL encoded.
-        :param citystatezip: The city+state combination and/or ZIP code for which to search.
-        :param retnzestimate: Return Rent Zestimate information if available (boolean true/false, default: false)
+        :param address: The address of the property to search. This string
+            should be URL encoded.
+        :param citystatezip: The city+state combination and/or ZIP code
+            for which to search.
+        :param retnzestimate: Return Rent Zestimate information if available
+            (boolean true/false, default: false)
         :return:
 
         Example:
@@ -135,7 +132,7 @@ class ValuationApi(object):
         if retnzestimate:
             parameters['retnzestimate'] = 'true'
 
-        resp = self._RequestUrl(url, 'GET', data=parameters)
+        resp = request_url(url, 'GET', data=parameters)
         data = resp.content.decode('utf-8')
 
         xmltodict_data = xmltodict.parse(data)
@@ -150,10 +147,13 @@ class ValuationApi(object):
 
     def GetDeepComps(self, zws_id, zpid, count=10, rentzestimate=False):
         """
-        The GetDeepComps API returns a list of comparable recent sales for a specified property.
-        The result set returned contains the address, Zillow property identifier, and Zestimate for the comparable
-        properties and the principal property for which the comparables are being retrieved.
+        The GetDeepComps API returns a list of comparable recent sales for
+        a specified property.
+        The result set returned contains the address, Zillow property identifier, and
+        Zestimate for the comparable properties and the principal property for which
+        the comparables are being retrieved.
         This API call also returns rich property data for the comparables.
+
         :param zws_id: The Zillow Web Service Identifier.
         :param zpid: The address of the property to search. This string should be URL encoded.
         :param count: The number of comparable recent sales to obtain (integer between 1 and 25)
@@ -169,7 +169,7 @@ class ValuationApi(object):
         if rentzestimate:
             parameters['rentzestimate'] = 'true'
 
-        resp = self._RequestUrl(url, 'GET', data=parameters)
+        resp = request_url(url, 'GET', data=parameters)
         data = resp.content.decode('utf-8')
 
         # transform the data to an dict-like object
@@ -222,7 +222,7 @@ class ValuationApi(object):
         if rentzestimate:
             parameters['rentzestimate'] = 'true'
 
-        resp = self._RequestUrl(url, 'GET', data=parameters)
+        resp = request_url(url, 'GET', data=parameters)
         data = resp.content.decode('utf-8')
 
         # transform the data to an dict-like object
@@ -256,75 +256,6 @@ class ValuationApi(object):
 
         return output
 
-    def _RequestUrl(self, url, verb, data=None):
-        """
-        Request a url.
-        :param url: The web location we want to retrieve.
-        :param verb: GET only (for now).
-        :param data: A dict of (str, unicode) key/value pairs.
-        :return:A JSON object.
-        """
-        if verb == 'GET':
-            url = self._BuildUrl(url, extra_params=data)
-            try:
-                return requests.get(
-                    url,
-                    auth=self.__auth,
-                    timeout=self._timeout
-                )
-            except requests.RequestException as e:
-                raise ZillowError(str(e))
-        return 0
-
-    def _BuildUrl(self, url, path_elements=None, extra_params=None):
-        """
-        Taken from: https://github.com/bear/python-twitter/blob/master/twitter/api.py#L3814-L3836
-        :param url:
-        :param path_elements:
-        :param extra_params:
-        :return:
-        """
-        # Break url into constituent parts
-        (scheme, netloc, path, params, query, fragment) = urlparse(url)
-
-        # Add any additional path elements to the path
-        if path_elements:
-            # Filter out the path elements that have a value of None
-            p = [i for i in path_elements if i]
-            if not path.endswith('/'):
-                path += '/'
-            path += '/'.join(p)
-
-        # Add any additional query parameters to the query string
-        if extra_params and len(extra_params) > 0:
-            extra_query = self._EncodeParameters(extra_params)
-            # Add it to the existing query
-            if query:
-                query += '&' + extra_query
-            else:
-                query = extra_query
-
-        # Return the rebuilt URL
-        return urlunparse((scheme, netloc, path, params, query, fragment))
-
-    def _EncodeParameters(self, parameters):
-        """
-        Return a string in key=value&key=value form.
-        :param parameters: A dict of (key, value) tuples, where value is encoded as specified by self._encoding
-        :return:A URL-encoded string in "key=value&key=value" form
-        """
-
-        if parameters is None:
-            return None
-        else:
-            return urlencode(dict([(k, self._Encode(v)) for k, v in list(parameters.items()) if v is not None]))
-
-    def _Encode(self, s):
-        if self._input_encoding:
-            return str(s, self._input_encoding).encode('utf-8')
-        else:
-            return str(s).encode('utf-8')
-
 
 class NeighborhoodApi(object):
     """
@@ -343,3 +274,69 @@ class NeighborhoodApi(object):
     def base_url(self):
         return self._base_url
 
+    @staticmethod
+    def _parse_out_regions(xml_response):
+        def _create_region(data):
+            region = Region()
+            region.set_data(data)
+            return region
+
+        region_data = xml_response['RegionChildren:regionchildren']['response']['list']['region']
+        regions = []
+        try:
+            for datum in region_data:
+                regions.append(_create_region(datum))
+        except Exception:
+            raise ZillowError({'message': 'No valid comp data found %s' % datum})
+
+        return {'regions': regions}
+
+    def GetRegionChildren(self, zws_id, **kwargs):
+        """
+        For a specified region, the GetRegionChildren API returns a list of
+        subregions with the following information:
+            * Subregion Type
+            * Region IDs
+            * Region Names
+            * URL to Corresponding Zillow Page (only for cities and neighborhoods)
+            * Latitudes and Longitudes
+
+        :param zws_id: The Zillow Web Service Identifier. Each subscriber to Zillow
+            Web Services is uniquely identified by an ID sequence and every request
+            to Web services requires this ID. Click here to get yours.	Yes
+        :param region_id: The regionId of the region to retrieve subregions from.
+            Either region_id or state must be passed.
+        :param state: The state of the region to retrieve subregions from.
+            Either region_id or state must be passed.
+        :param county: The county of the region to retrieve subregions from.
+        :param city: The city of the region to retrieve subregions from.
+        :param childtype: The type of subregions to retrieve
+            (available types: state, county, city, zipcode, and neighborhood).
+        :return:
+
+        Example:
+        """
+        kwarg_mappings = {
+            'regionId': 'region_id',
+            'state': 'state',
+            'county': 'county',
+            'city': 'city',
+            'childtype': 'childtype',
+        }
+
+        if len(set(kwargs.keys()) & {'region_id', 'state'}) != 1:
+            raise ValueError("One keyword argument of 'region_id' or "
+                             "'state' is required")
+
+        url = '%s/GetRegionChildren.htm' % (self._base_url)
+        parameters = dict(
+            [(zapi_arg, kwargs[f_arg])
+             for zapi_arg, f_arg in kwarg_mappings.items()
+             if f_arg in kwargs])
+        parameters['zws-id'] = zws_id
+
+        resp = request_url(url, 'GET', data=parameters)
+        data = resp.content.decode('utf-8')
+
+        xmltodict_data = xmltodict.parse(data)
+        return self._parse_out_regions(xmltodict_data)

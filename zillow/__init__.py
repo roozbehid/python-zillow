@@ -5,10 +5,15 @@ from __future__ import absolute_import
 import os as _os
 import pkg_resources as _pkg_resources
 
-from .error import ZillowError  # noqa: F401
-from .place import Place  # noqa: F401
-from .api import ValuationApi  # noqa: F401
+from .error import ZillowError
+from .result_fields import Place
+from .api import ValuationApi
+from .api import NeighborhoodApi
 
+
+__all__ = [
+    "ValuationApi", "NeighborhoodApi",
+    "Place", "ZillowError"]
 
 __author__ = 'python-zillow@googlegroups.com'
 

@@ -3,7 +3,7 @@
 import zillow
 import pprint
 
-if __name__=="__main__":
+if __name__ == "__main__":
     key = ""
     with open("./bin/config/zillow_key.conf", 'r') as f:
         key = f.readline().replace("\n", "")

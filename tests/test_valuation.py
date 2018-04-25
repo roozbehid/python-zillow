@@ -106,7 +106,7 @@ class TestGetSearchResult(unittest.TestCase):
         xmltodict_data = xmltodict.parse(RAW_XML)
 
         # get the principal property data
-        principal_place = Place()
+        # principal_place = Place()
         principal_data = xmltodict_data.get('Comps:comps')['response']['properties']['principal']
 
         assert principal_data is not None

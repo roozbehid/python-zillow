@@ -1,29 +1,30 @@
-from abc import abstractmethod
+
 import warnings
 
+from abc import ABCMeta
+from abc import abstractmethod
+from six import with_metaclass
 
-class SourceData(classmethod):
+
+class SourceData(with_metaclass(ABCMeta, object)):
 
     @abstractmethod
     def set_data(self, source_data):
         """
         @type source_data: dict
         """
-        raise NotImplementedError()
+        pass
 
-    @abstractmethod
     def debug(self):
         for i in self.__dict__.keys():
             print("%s: %s" % (i, self.__dict__[i]))
 
-    @abstractmethod
     def get_dict(self):
         res = {}
         for i in self.__dict__.keys():
             res[i] = self.__dict__[i]
         return res
 
-    @abstractmethod
     def set_values_from_dict(self, data_dict):
         """
         @type data_dict: dict
@@ -229,3 +230,27 @@ class Place(SourceData):
             'extended_data': self.extended_data.get_dict()
         }
         return data
+
+
+class Region(SourceData):
+
+    def __init__(self, **kwargs):
+        self.region_id = None
+        self.region_name = None
+        self.zindex = None
+        self.city_url = None
+        self.latitude = None
+        self.longitude = None
+
+    def set_data(self, source_data):
+        """
+        :source_data: Data from data.get('SearchResults:searchresults', None)['response']['results']['result']['links']
+        :return:
+        """
+
+        self.region_id = source_data['id']
+        self.region_name = source_data['name']
+        self.zindex = source_data.get('zindex', None)
+        self.city_url = source_data['url']
+        self.latitude = source_data['latitude']
+        self.longitude = source_data['longitude']
