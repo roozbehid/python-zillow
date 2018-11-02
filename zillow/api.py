@@ -32,7 +32,7 @@ class ValuationApi(object):
         self.__auth = None
         self._timeout = None
 
-    def GetSearchResults(self, zws_id, address, citystatezip, retnzestimate=False):
+    def GetSearchResults(self, zws_id, address, citystatezip, rentzestimate=False):
         """
         The GetSearchResults API finds a property for a specified address.
         The content returned contains the address for the property or properties as well as the Zillow Property ID (ZPID) and current Zestimate.
@@ -41,7 +41,7 @@ class ValuationApi(object):
         :param zws_id: The Zillow Web Service Identifier. Each subscriber to Zillow Web Services is uniquely identified by an ID sequence and every request to Web services requires this ID.
         :param address: The address of the property to search. This string should be URL encoded.
         :param citystatezip: The city+state combination and/or ZIP code for which to search. This string should be URL encoded. Note that giving both city and state is required. Using just one will not work.
-        :param retnzestimat: Return Rent Zestimate information if available (boolean true/false, default: false)
+        :param rentzestimat: Return Rent Zestimate information if available (boolean true/false, default: false)
         :return:
         """
         url = '%s/GetSearchResults.htm' % (self.base_url)
@@ -51,8 +51,8 @@ class ValuationApi(object):
             parameters['citystatezip'] = citystatezip
         else:
             raise ZillowError({'message': "Specify address and citystatezip."})
-        if retnzestimate:
-            parameters['retnzestimate'] = 'true'
+        if rentzestimate:
+            parameters['rentzestimate'] = 'true'
 
         resp = self._RequestUrl(url, 'GET', data=parameters)
         data = resp.content.decode('utf-8')
@@ -67,7 +67,7 @@ class ValuationApi(object):
 
         return place
 
-    def GetZEstimate(self, zws_id, zpid, retnzestimate=False):
+    def GetZEstimate(self, zws_id, zpid, rentzestimate=False):
         """
         The GetZestimate API will only surface properties for which a Zestimate exists.
         If a request is made for a property that has no Zestimate, an error code is returned.
@@ -76,14 +76,14 @@ class ValuationApi(object):
         For more information, see our Zestimate coverage.
         :zws_id: The Zillow Web Service Identifier.
         :param zpid: The address of the property to search. This string should be URL encoded.
-        :param retnzestimate: Return Rent Zestimate information if available (boolean true/false, default: false)
+        :param rentzestimate: Return Rent Zestimate information if available (boolean true/false, default: false)
         :return:
         """
         url = '%s/GetZestimate.htm' % (self.base_url)
         parameters = {'zws-id': zws_id,
                       'zpid': zpid}
-        if retnzestimate:
-            parameters['retnzestimate'] = 'true'
+        if rentzestimate:
+            parameters['rentzestimate'] = 'true'
 
         resp = self._RequestUrl(url, 'GET', data=parameters)
         data = resp.content.decode('utf-8')
@@ -98,7 +98,7 @@ class ValuationApi(object):
 
         return place
 
-    def GetDeepSearchResults(self, zws_id, address, citystatezip, retnzestimate=False):
+    def GetDeepSearchResults(self, zws_id, address, citystatezip, rentzestimate=False):
         """
         The GetDeepSearchResults API finds a property for a specified address.
         The result set returned contains the full address(s), zpid and Zestimate data that is provided by the GetSearchResults API.
@@ -106,7 +106,7 @@ class ValuationApi(object):
         :zws_id: The Zillow Web Service Identifier.
         :param address: The address of the property to search. This string should be URL encoded.
         :param citystatezip: The city+state combination and/or ZIP code for which to search.
-        :param retnzestimate: Return Rent Zestimate information if available (boolean true/false, default: false)
+        :param rentzestimate: Return Rent Zestimate information if available (boolean true/false, default: false)
         :return:
 
         Example:
@@ -117,8 +117,8 @@ class ValuationApi(object):
                       'citystatezip': citystatezip
                       }
 
-        if retnzestimate:
-            parameters['retnzestimate'] = 'true'
+        if rentzestimate:
+            parameters['rentzestimate'] = 'true'
 
         resp = self._RequestUrl(url, 'GET', data=parameters)
         data = resp.content.decode('utf-8')
@@ -195,7 +195,7 @@ class ValuationApi(object):
         and Zestimate for the comparable properties and the principal property for which the comparables are being retrieved.
         :param zpid: The address of the property to search. This string should be URL encoded.
         :param count: The number of comparable recent sales to obtain (integer between 1 and 25)
-        :param retnzestimate: Return Rent Zestimate information if available (boolean true/false, default: false)
+        :param rentzestimate: Return Rent Zestimate information if available (boolean true/false, default: false)
         :return:
         """
         url = '%s/GetComps.htm' % (self.base_url)

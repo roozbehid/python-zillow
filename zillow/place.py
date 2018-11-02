@@ -171,6 +171,7 @@ class Place(SourceData):
         self.links = Links()
         self.full_address = FullAddress()
         self.zestimate = ZEstimateData()
+        self.rentzestimate = ZEstimateData()
         self.local_realestate = LocalRealEstate()
         self.similarity_score = None
         self.extended_data = ExtendedData()
@@ -199,6 +200,8 @@ class Place(SourceData):
         self.links.set_data(source_data['links'])
         self.full_address.set_data(source_data['address'])
         self.zestimate.set_data(source_data['zestimate'])
+        if 'rentzestimate' in source_data.keys():
+             self.rentzestimate.set_data(source_data['rentzestimate'])
         self.local_realestate.set_data(source_data['localRealEstate'])
         if self.has_extended_data:
             self.extended_data.set_data(source_data)
@@ -210,6 +213,7 @@ class Place(SourceData):
             'links': self.links.get_dict(),
             'full_address': self.full_address.get_dict(),
             'zestimate': self.zestimate.get_dict(),
+            'rentzestimate': self.rentzestimate.get_dict(),
             'local_realestate': self.local_realestate.get_dict(),
             'extended_data': self.extended_data.get_dict()
         }
