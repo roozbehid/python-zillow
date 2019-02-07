@@ -57,6 +57,22 @@ class TestGetSearchResult(unittest.TestCase):
             place.zestiamte
             assert issubclass(warning[0].category, DeprecationWarning)
 
+    def test_rent_zestimate(self):
+        RAW_XML = ""
+        with open('./testdata/rent_zestimate.xml', 'r') as f:
+            RAW_XML = ''.join(f.readlines())
+
+        data = xmltodict.parse(RAW_XML)
+
+        place = Place()
+        place.set_data(data.get('SearchResults:searchresults', None)['response']['results']['result'])
+
+        self.assertEqual("48749425", place.zpid)
+        self.assertEqual(5495, place.rentzestimate.amount)
+        self.assertEqual(4011, place.rentzestimate.valuation_range_low)
+        self.assertEqual(6209, place.rentzestimate.valuation_range_high)
+        self.assertEqual(17, place.rentzestimate.amount_change_30days)
+
     def test_getcomps_principal(self):
         RAW_XML = ""
         with open('./testdata/get_comps.xml', 'r') as f:
